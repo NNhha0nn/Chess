@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cờ Vua Pro - Chơi Online Với Bạn & Đấu Với Máy</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="assets/pieces/wK.svg" type="image/svg+xml">
+</head>
+<body data-board-theme="green">
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-icon">♟️</div>
+      <div class="brand-text">
+        <h1>CỜ VUA PRO</h1>
+        <p>Phòng Riêng 2 Người (Online) & Đấu Với Máy (AI)</p>
+      </div>
+    </div>
+    <div class="header-status">
+      <span id="onlineIndicatorBadge" class="online-indicator" style="display: none;">
+        <span class="online-dot"></span>
+        <span>Online</span>
+      </span>
+      <span id="headerStatusBadge" class="badge turn-white">⚪ Lượt quân Trắng</span>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="app-container">
+
+    <!-- Chess Game Section -->
+    <section class="game-section">
+
+      <!-- Top Player Bar (Opponent / Bot) -->
+      <div class="player-bar top">
+        <div class="player-info">
+          <div id="topPlayerAvatar" class="player-avatar">🤖</div>
+          <div class="player-name-wrapper">
+            <span id="topPlayerName" class="player-name">Máy - AI (Cấp 2)</span>
+            <div class="player-captured">
+              <div id="topCaptured"></div>
+              <span id="blackScoreDiff" class="score-diff"></span>
+            </div>
+          </div>
+        </div>
+        <div id="topPlayerTimer" class="player-timer">05:00</div>
+      </div>
+
+      <!-- Board and Evaluation Bar -->
+      <div class="board-wrapper">
+        <!-- Advantage / Evaluation Bar -->
+        <div class="eval-bar-container" title="Thanh đánh giá ưu thế">
+          <div id="evalBarWhite" class="eval-bar-white"></div>
+        </div>
+
+        <!-- The 8x8 Chessboard -->
+        <div class="chessboard-container">
+          <div id="boardGrid" class="board-grid"></div>
+        </div>
+      </div>
+
+      <!-- Bottom Player Bar (You) -->
+      <div class="player-bar bottom">
+        <div class="player-info">
+          <div id="bottomPlayerAvatar" class="player-avatar">👤</div>
+          <div class="player-name-wrapper">
+            <span id="bottomPlayerName" class="player-name">Bạn (Trắng)</span>
+            <div class="player-captured">
+              <div id="bottomCaptured"></div>
+              <span id="whiteScoreDiff" class="score-diff"></span>
+            </div>
+          </div>
+        </div>
+        <div id="bottomPlayerTimer" class="player-timer active">05:00</div>
+      </div>
+
+      <!-- Bot Thinking Status -->
+      <div id="botThinkingBanner" class="bot-thinking-banner">
+        <div class="spinner"></div>
+        <span>Máy đang tính toán nước đi tốt nhất...</span>
+      </div>
+
+    </section>
+
+    <!-- Sidebar Controls Section -->
+    <aside class="sidebar">
+
+      <!-- Mode & Settings Card -->
+      <div class="card">
+        <div class="card-title">
+          <span>⚙️ CHẾ ĐỘ CHƠI</span>
+        </div>
+
+        <!-- Mode Tabs (3 Tabs) -->
+        <div class="mode-tabs">
+          <button id="tabOnline" class="mode-tab active">
+            <span>🌐 Chơi Online</span>
+          </button>
+          <button id="tabBot" class="mode-tab">
+            <span>🤖 Đấu Máy</span>
+          </button>
+          <button id="tabPvP" class="mode-tab">
+            <span>👥 Chung máy</span>
+          </button>
+        </div>
+
+        <!-- 1. ONLINE MULTIPLAYER PANEL -->
+        <div id="onlineSettingsGroup" class="settings-group" style="display: flex;">
+
+          <!-- Lobby Forms (When not currently in a room) -->
+          <div id="onlineLobbyForms" style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
+            <!-- Sub-tabs: Create or Join -->
+            <div class="segmented-control">
+              <button id="btnOnlineSubCreate" class="seg-btn active">Tạo phòng riêng</button>
+              <button id="btnOnlineSubJoin" class="seg-btn">Vào phòng có sẵn</button>
+            </div>
+
+            <!-- Form: Create Room -->
+            <div id="formOnlineCreate" style="display: flex; flex-direction: column; gap: 10px;">
+              <div class="setting-row">
+                <label class="setting-label">Tên của bạn:</label>
+                <input id="onlinePlayerName" class="input-control" type="text" placeholder="Nhập tên bạn (vd: Tuấn)" value="Tôi">
+              </div>
+
+              <div class="setting-row">
+                <label class="setting-label">Mã phòng riêng:</label>
+                <div style="display: flex; gap: 6px;">
+                  <input id="createRoomId" class="input-control" type="text" placeholder="Mã phòng (vd: tuan-nam-123)" value="co-vua-vip">
+                  <button id="btnRandomRoomId" class="btn-secondary-action" style="width: auto; padding: 0 10px;" title="Tạo mã ngẫu nhiên">🎲</button>
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <label class="setting-label">Mật khẩu phòng (khóa người lạ):</label>
+                <input id="createRoomPin" class="input-control" type="text" placeholder="Để trống nếu không khóa" value="1234">
+              </div>
+
+              <div class="setting-row">
+                <label class="setting-label">Chọn màu quân:</label>
+                <div id="onlineSideSelect" class="segmented-control">
+                  <button class="seg-btn active" data-side="w">⚪ Trắng</button>
+                  <button class="seg-btn" data-side="b">⚫ Đen</button>
+                  <button class="seg-btn" data-side="random">🎲 Ngẫu nhiên</button>
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <label class="setting-label">Thời gian mỗi bên:</label>
+                <div id="onlineTimeSelect" class="segmented-control">
+                  <button class="seg-btn" data-time="0">Vô hạn</button>
+                  <button class="seg-btn" data-time="180">3 phút</button>
+                  <button class="seg-btn active" data-time="300">5 phút</button>
+                  <button class="seg-btn" data-time="600">10 phút</button>
+                </div>
+              </div>
+
+              <button id="btnDoCreateRoom" class="btn-primary-action">
+                <span>🔐</span>
+                <span>Tạo Phòng & Lấy Link Mời</span>
+              </button>
+            </div>
+
+            <!-- Form: Join Room -->
+            <div id="formOnlineJoin" style="display: none; flex-direction: column; gap: 10px;">
+              <div class="setting-row">
+                <label class="setting-label">Tên của bạn:</label>
+                <input id="joinPlayerName" class="input-control" type="text" placeholder="Nhập tên bạn (vd: Nam)" value="Bạn tôi">
+              </div>
+
+              <div class="setting-row">
+                <label class="setting-label">Mã phòng cần vào:</label>
+                <input id="joinRoomId" class="input-control" type="text" placeholder="Nhập mã phòng bạn nhận được">
+              </div>
+
+              <div class="setting-row">
+                <label class="setting-label">Mật khẩu phòng (nếu có):</label>
+                <input id="joinRoomPin" class="input-control" type="password" placeholder="Nhập mật khẩu phòng">
+              </div>
+
+              <button id="btnDoJoinRoom" class="btn-primary-action">
+                <span>🚀</span>
+                <span>Vào Phòng Thi Đấu</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Active Room Card (Shown when joined/created room) -->
+          <div id="onlineActiveRoomCard" class="online-room-card" style="display: none;">
+            <div class="room-meta-header">
+              <div>Phòng: <span id="currentRoomIdDisplay" class="room-id-badge"></span></div>
+              <div id="currentRoomColorDisplay" style="font-size: 12px; font-weight: 700;"></div>
+            </div>
+
+            <div id="roomStatusDisplay" class="room-status-text">Đang chờ bạn của bạn vào phòng...</div>
+
+            <button id="btnCopyInviteLink" class="btn-secondary-action" style="background: rgba(37, 99, 235, 0.2); border-color: #3b82f6;">
+              <span>📋</span>
+              <span>Sao Chép Link Mời Bạn Chơi</span>
+            </button>
+
+            <!-- Online Match Actions -->
+            <div class="online-game-controls">
+              <button id="btnOnlineOfferDraw" class="btn-secondary-action" style="padding: 6px;">
+                <span>🤝 Xin hòa</span>
+              </button>
+              <button id="btnOnlineResign" class="btn-secondary-action btn-danger-action" style="padding: 6px;">
+                <span>🏳️ Đầu hàng</span>
+              </button>
+              <button id="btnLeaveRoom" class="btn-secondary-action" style="padding: 6px;">
+                <span>🚪 Rời phòng</span>
+              </button>
+            </div>
+
+            <!-- In-game Chat -->
+            <div class="chat-container">
+              <div class="chat-header">
+                <span>💬 TRÒ CHUYỆN VỚI BẠN</span>
+              </div>
+              <div class="emoji-bar">
+                <button class="emoji-btn">👍</button>
+                <button class="emoji-btn">🔥</button>
+                <button class="emoji-btn">👏</button>
+                <button class="emoji-btn">😂</button>
+                <button class="emoji-btn">♟️</button>
+                <button class="emoji-btn">☕</button>
+              </div>
+              <div id="chatMessagesList" class="chat-messages">
+                <div class="chat-msg" style="color: #94a3b8; font-style: italic;">Phòng cờ đã sẵn sàng!</div>
+              </div>
+              <div class="chat-input-row">
+                <input id="chatTextInput" class="input-control" type="text" placeholder="Nhập tin nhắn..." maxlength="150">
+                <button id="btnSendChat">Gửi</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- 2. BOT SETTINGS (Active in Bot mode) -->
+        <div id="botSettingsGroup" class="settings-group" style="display: none;">
+          <div class="setting-row">
+            <label class="setting-label">Độ khó của Máy:</label>
+            <div class="segmented-control">
+              <button class="seg-btn" data-level="1">Dễ</button>
+              <button class="seg-btn active" data-level="2">Vừa</button>
+              <button class="seg-btn" data-level="3">Khó</button>
+              <button class="seg-btn" data-level="4">Kiện tướng</button>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <label class="setting-label">Chọn màu quân:</label>
+            <div class="segmented-control">
+              <button class="seg-btn active" data-side="w">⚪ Trắng</button>
+              <button class="seg-btn" data-side="b">⚫ Đen</button>
+              <button class="seg-btn" data-side="random">🎲 Ngẫu nhiên</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. STANDARD CONTROLS (For Bot & Pass-and-Play) -->
+        <div id="standardControls" style="display: none;">
+          <!-- Time Control Settings -->
+          <div class="settings-group">
+            <div class="setting-row">
+              <label class="setting-label">Thời gian thi đấu:</label>
+              <div id="standardTimeControl" class="segmented-control">
+                <button class="seg-btn" data-time="0">Vô hạn</button>
+                <button class="seg-btn" data-time="180">3 phút</button>
+                <button class="seg-btn active" data-time="300">5 phút</button>
+                <button class="seg-btn" data-time="600">10 phút</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Game Actions -->
+          <div class="actions-grid">
+            <button id="btnUndo" class="btn-action" title="Hoàn tác nước đi">
+              <span class="icon">↩️</span>
+              <span>Đi lại</span>
+            </button>
+            <button id="btnHint" class="btn-action" title="Gợi ý nước cờ tối ưu">
+              <span class="icon">💡</span>
+              <span>Gợi ý</span>
+            </button>
+            <button id="btnFlip" class="btn-action" title="Xoay ngược bàn cờ">
+              <span class="icon">🔃</span>
+              <span>Xoay</span>
+            </button>
+            <button id="btnSound" class="btn-action" title="Bật/Tắt âm thanh">
+              <span class="icon">🔊</span>
+              <span>Âm thanh</span>
+            </button>
+          </div>
+
+          <button id="btnNewGame" class="btn-primary-action">
+            <span>🔄</span>
+            <span>Bắt Đầu Ván Mới</span>
+          </button>
+        </div>
+
+        <!-- Theme Selector (Always accessible) -->
+        <div class="settings-group" style="margin-top: 14px; border-top: 1px solid var(--border-color); padding-top: 10px;">
+          <div class="setting-row">
+            <label class="setting-label">Giao diện bàn cờ:</label>
+            <div class="segmented-control">
+              <button class="seg-btn active" data-theme="green">Xanh lá</button>
+              <button class="seg-btn" data-theme="wood">Gỗ cổ điển</button>
+              <button class="seg-btn" data-theme="blue">Xanh dương</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Move History Card -->
+      <div class="card history-card">
+        <div class="card-title">
+          <span>📜 BIÊN BẢN NƯỚC ĐI</span>
+          <button id="btnCopyPGN" class="btn-action" style="padding: 4px 8px; font-size: 11px;" title="Sao chép PGN">
+            <span>📋 Sao chép</span>
+          </button>
+        </div>
+        <div id="historyList" class="history-list"></div>
+      </div>
+
+    </aside>
+
+  </main>
+
+  <!-- Pawn Promotion Modal -->
+  <div id="promotionModal" class="modal-overlay">
+    <div class="modal-content">
+      <h2 class="modal-title">Phong Cấp Cho Tốt</h2>
+      <p class="modal-body">Chọn quân cờ bạn muốn nâng cấp cho Tốt của mình:</p>
+      <div class="promotion-choices">
+        <button class="promotion-item" data-piece="q" title="Hậu (Queen)">
+          <img src="assets/pieces/wQ.svg" alt="Queen">
+        </button>
+        <button class="promotion-item" data-piece="r" title="Xe (Rook)">
+          <img src="assets/pieces/wR.svg" alt="Rook">
+        </button>
+        <button class="promotion-item" data-piece="b" title="Tượng (Bishop)">
+          <img src="assets/pieces/wB.svg" alt="Bishop">
+        </button>
+        <button class="promotion-item" data-piece="n" title="Mã (Knight)">
+          <img src="assets/pieces/wN.svg" alt="Knight">
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Game Over Modal -->
+  <div id="gameOverModal" class="modal-overlay">
+    <div class="modal-content">
+      <h2 id="gameOverTitle" class="modal-title">Chiếu Bí!</h2>
+      <p id="gameOverBody" class="modal-body">Ván cờ đã kết thúc.</p>
+      <div class="modal-actions">
+        <button id="btnModalNewGame" class="btn-modal primary">Chơi Ván Mới</button>
+        <button id="btnModalClose" class="btn-modal secondary">Xem Bàn Cờ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="lib/socket.io.min.js"></script>
+  <script src="lib/chess.min.js"></script>
+  <script src="js/sounds.js"></script>
+  <script src="js/engine.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/online.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
